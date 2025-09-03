@@ -19,6 +19,7 @@ import {
   BookOpenIcon,
   GraduationCapIcon,
   ShieldIcon,
+  UserIcon,
 } from "lucide-react";
 
 import { NavDocuments } from "~/components/nav-documents";
