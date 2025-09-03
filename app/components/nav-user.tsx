@@ -6,6 +6,7 @@ import {
   UserCircleIcon,
   SettingsIcon,
 } from "lucide-react";
+import { useAuth } from "~/contexts/auth-context";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
@@ -36,6 +37,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   return (
     <SidebarMenu>
@@ -108,7 +110,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={logout}>
               <LogOutIcon className="h-4 w-4" />
               Log out
             </DropdownMenuItem>
