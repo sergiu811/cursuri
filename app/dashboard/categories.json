@@ -1,0 +1,114 @@
+{
+  "categories": [
+    {
+      "id": "1",
+      "name": "Frontend Development",
+      "description": "Web development focusing on user interface and user experience",
+      "color": "#3B82F6",
+      "icon": "code",
+      "courseCount": 4,
+      "isActive": true,
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-15"
+    },
+    {
+      "id": "2",
+      "name": "Backend Development",
+      "description": "Server-side development and database management",
+      "color": "#10B981",
+      "icon": "server",
+      "courseCount": 1,
+      "isActive": true,
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-10"
+    },
+    {
+      "id": "3",
+      "name": "Mobile Development",
+      "description": "Cross-platform and native mobile app development",
+      "color": "#8B5CF6",
+      "icon": "smartphone",
+      "courseCount": 1,
+      "isActive": true,
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-12"
+    },
+    {
+      "id": "4",
+      "name": "Data Science",
+      "description": "Data analysis, machine learning, and statistical modeling",
+      "color": "#F59E0B",
+      "icon": "bar-chart-3",
+      "courseCount": 2,
+      "isActive": true,
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-08"
+    },
+    {
+      "id": "5",
+      "name": "Design",
+      "description": "UI/UX design, graphic design, and visual communication",
+      "color": "#EF4444",
+      "icon": "palette",
+      "courseCount": 1,
+      "isActive": true,
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-12"
+    },
+    {
+      "id": "6",
+      "name": "Programming Languages",
+      "description": "Core programming language concepts and advanced features",
+      "color": "#06B6D4",
+      "icon": "languages",
+      "courseCount": 2,
+      "isActive": true,
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-11"
+    },
+    {
+      "id": "7",
+      "name": "DevOps",
+      "description": "Development operations, CI/CD, and deployment automation",
+      "color": "#84CC16",
+      "icon": "settings",
+      "courseCount": 1,
+      "isActive": true,
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-14"
+    },
+    {
+      "id": "8",
+      "name": "Cybersecurity",
+      "description": "Web security, ethical hacking, and security best practices",
+      "color": "#DC2626",
+      "icon": "shield",
+      "courseCount": 1,
+      "isActive": true,
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-16"
+    },
+    {
+      "id": "9",
+      "name": "Database",
+      "description": "Database design, SQL, and data management",
+      "color": "#7C3AED",
+      "icon": "database",
+      "courseCount": 1,
+      "isActive": true,
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-07"
+    },
+    {
+      "id": "10",
+      "name": "Development Tools",
+      "description": "Version control, development environments, and productivity tools",
+      "color": "#059669",
+      "icon": "wrench",
+      "courseCount": 1,
+      "isActive": true,
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-14"
+    }
+  ]
+}

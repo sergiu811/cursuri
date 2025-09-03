@@ -38,7 +38,9 @@ import { useState, useEffect } from "react";
 import { AddCourseDialog } from "~/components/add-course-dialog";
 import { EditCourseDialog } from "~/components/edit-course-dialog";
 import { DeleteCourseDialog } from "~/components/delete-course-dialog";
+import { CategoryDialog, type Category } from "~/components/category-dialog";
 import coursesData from "../dashboard/courses.json";
+import categoriesData from "../dashboard/categories.json";
 
 interface Course {
   id: string;
@@ -87,6 +89,18 @@ export default function AdminPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+
+  // Category management state
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null
+  );
+  const [categoryMode, setCategoryMode] = useState<"add" | "edit">("add");
+  const [activeTab, setActiveTab] = useState<"courses" | "categories">(
+    "courses"
+  );
+
   const [stats, setStats] = useState<AdminStats>({
     totalCourses: 0,
     totalStudents: 0,
@@ -103,6 +117,9 @@ export default function AdminPage() {
     ];
     setCourses(allCourses);
     setFilteredCourses(allCourses);
+
+    // Load categories
+    setCategories(categoriesData.categories);
 
     // Calculate admin stats
     calculateStats(allCourses);
@@ -242,6 +259,48 @@ export default function AdminPage() {
     setIsDeleteDialogOpen(true);
   };
 
+  // Category management functions
+  const openCategoryDialog = (mode: "add" | "edit", category?: Category) => {
+    setCategoryMode(mode);
+    setSelectedCategory(category || null);
+    setIsCategoryDialogOpen(true);
+  };
+
+  const handleSaveCategory = (
+    categoryData: Omit<
+      Category,
+      "id" | "courseCount" | "createdAt" | "updatedAt"
+    >
+  ) => {
+    if (categoryMode === "add") {
+      const newCategory: Category = {
+        ...categoryData,
+        id: Date.now().toString(),
+        courseCount: 0,
+        createdAt: new Date().toISOString().split("T")[0],
+        updatedAt: new Date().toISOString().split("T")[0],
+      };
+      setCategories((prev) => [...prev, newCategory]);
+    } else if (selectedCategory) {
+      const updatedCategory: Category = {
+        ...selectedCategory,
+        ...categoryData,
+        updatedAt: new Date().toISOString().split("T")[0],
+      };
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === selectedCategory.id ? updatedCategory : cat
+        )
+      );
+    }
+    setIsCategoryDialogOpen(false);
+    setSelectedCategory(null);
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    setCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
+  };
+
   const getCategoryOptions = () => {
     const categories = Array.from(
       new Set(courses.map((course) => course.category))
@@ -277,315 +336,447 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Stats Cards */}
+              {/* Tabs */}
               <div className="px-4 lg:px-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Total Courses
-                      </CardTitle>
-                      <BookOpenIcon className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        {stats.totalCourses}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Total Students
-                      </CardTitle>
-                      <UsersIcon className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        {stats.totalStudents.toLocaleString()}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Total Revenue
-                      </CardTitle>
-                      <span className="text-sm font-medium">$</span>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        ${stats.totalRevenue.toLocaleString()}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Average Rating
-                      </CardTitle>
-                      <StarIcon className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        {stats.averageRating}
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
+                  <Button
+                    variant={activeTab === "courses" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab("courses")}
+                    className="text-sm"
+                  >
+                    Courses
+                  </Button>
+                  <Button
+                    variant={activeTab === "categories" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab("categories")}
+                    className="text-sm"
+                  >
+                    Categories
+                  </Button>
                 </div>
               </div>
 
-              {/* Most Purchased Courses */}
-              <div className="px-4 lg:px-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUpIcon className="h-5 w-5" />
-                      Most Purchased Courses
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Top 5 courses by student enrollment
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    {stats.mostPurchasedCourses.length > 0 ? (
-                      <div className="space-y-4">
-                        {stats.mostPurchasedCourses.map((course, index) => (
-                          <div
-                            key={course.courseId}
-                            className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
-                                {index + 1}
+              {/* Stats Cards - Only show for courses tab */}
+              {activeTab === "courses" && (
+                <div className="px-4 lg:px-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Total Courses
+                        </CardTitle>
+                        <BookOpenIcon className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {stats.totalCourses}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Total Students
+                        </CardTitle>
+                        <UsersIcon className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {stats.totalStudents.toLocaleString()}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Total Revenue
+                        </CardTitle>
+                        <span className="text-sm font-medium">$</span>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          ${stats.totalRevenue.toLocaleString()}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Average Rating
+                        </CardTitle>
+                        <StarIcon className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {stats.averageRating}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+
+              {/* Most Purchased Courses - Only show for courses tab */}
+              {activeTab === "courses" && (
+                <div className="px-4 lg:px-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUpIcon className="h-5 w-5" />
+                        Most Purchased Courses
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Top 5 courses by student enrollment
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      {stats.mostPurchasedCourses.length > 0 ? (
+                        <div className="space-y-4">
+                          {stats.mostPurchasedCourses.map((course, index) => (
+                            <div
+                              key={course.courseId}
+                              className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                                  {index + 1}
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-sm">
+                                    {course.title}
+                                  </h4>
+                                  <p className="text-xs text-muted-foreground">
+                                    by {course.instructor}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-6 text-sm">
+                                <div className="text-center">
+                                  <div className="font-semibold text-primary">
+                                    {course.students.toLocaleString()}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Students
+                                  </div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="font-semibold text-green-600">
+                                    ${course.revenue.toLocaleString()}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Revenue
+                                  </div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="font-semibold text-yellow-600">
+                                    {course.rating}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Rating
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <BookOpenIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>No course purchase data available</p>
+                          <p className="text-sm">
+                            Courses will appear here once students enroll
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Actions and Filters - Only show for courses tab */}
+              {activeTab === "courses" && (
+                <div className="px-4 lg:px-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <Button
+                      onClick={() => setIsAddDialogOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                      Add New Course
+                    </Button>
+
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          placeholder="Search courses..."
+                          className="pl-10 w-64"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+
+                      <Select
+                        value={categoryFilter}
+                        onValueChange={setCategoryFilter}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {getCategoryOptions().map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Select
+                        value={statusFilter}
+                        onValueChange={setStatusFilter}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="All Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="published">Published</SelectItem>
+                          <SelectItem value="draft">Draft</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="w-[160px]">
+                          <SelectValue placeholder="Sort by" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="title">Title</SelectItem>
+                          <SelectItem value="instructor">Instructor</SelectItem>
+                          <SelectItem value="category">Category</SelectItem>
+                          <SelectItem value="price">Price</SelectItem>
+                          <SelectItem value="rating">Rating</SelectItem>
+                          <SelectItem value="students">Students</SelectItem>
+                          <SelectItem value="recent">
+                            Recently Updated
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Courses Table - Only show for courses tab */}
+              {activeTab === "courses" && (
+                <div className="px-4 lg:px-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>
+                        All Courses ({filteredCourses.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Course</TableHead>
+                            <TableHead>Instructor</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Rating</TableHead>
+                            <TableHead>Students</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredCourses.map((course) => (
+                            <TableRow key={course.id}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={course.thumbnail}
+                                    alt={course.title}
+                                    className="h-12 w-16 object-cover rounded"
+                                  />
+                                  <div>
+                                    <div className="font-medium">
+                                      {course.title}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                      <ClockIcon className="h-3 w-3" />
+                                      {course.duration}
+                                      <BookOpenIcon className="h-3 w-3" />
+                                      {course.lessons} lessons
+                                    </div>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {course.instructor}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {course.category}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  {course.originalPrice && (
+                                    <span className="text-sm text-muted-foreground line-through">
+                                      ${course.originalPrice}
+                                    </span>
+                                  )}
+                                  <span className="font-medium">
+                                    ${course.price}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <StarIcon className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                  <span>{course.rating}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {course.students
+                                  ? course.students.toLocaleString()
+                                  : "-"}
+                              </TableCell>
+                              <TableCell>{getStatusBadge(course)}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openEditDialog(course)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <PencilIcon className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openDeleteDialog(course)}
+                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2Icon className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Categories Section - Only show for categories tab */}
+              {activeTab === "categories" && (
+                <div className="px-4 lg:px-6">
+                  {/* Categories Actions */}
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <Button
+                      onClick={() => openCategoryDialog("add")}
+                      className="flex items-center gap-2"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                      Add New Category
+                    </Button>
+                  </div>
+
+                  {/* Categories Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {categories.map((category) => (
+                      <Card key={category.id} className="relative">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-semibold"
+                                style={{ backgroundColor: category.color }}
+                              >
+                                {category.icon.charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <h4 className="font-semibold text-sm">
-                                  {course.title}
-                                </h4>
-                                <p className="text-xs text-muted-foreground">
-                                  by {course.instructor}
+                                <CardTitle className="text-lg">
+                                  {category.name}
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground">
+                                  {category.courseCount} courses
                                 </p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-6 text-sm">
-                              <div className="text-center">
-                                <div className="font-semibold text-primary">
-                                  {course.students.toLocaleString()}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  Students
-                                </div>
-                              </div>
-                              <div className="text-center">
-                                <div className="font-semibold text-green-600">
-                                  ${course.revenue.toLocaleString()}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  Revenue
-                                </div>
-                              </div>
-                              <div className="text-center">
-                                <div className="font-semibold text-yellow-600">
-                                  {course.rating}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  Rating
-                                </div>
-                              </div>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  openCategoryDialog("edit", category)
+                                }
+                                className="h-8 w-8 p-0"
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleDeleteCategory(category.id)
+                                }
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              >
+                                <Trash2Icon className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <BookOpenIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No course purchase data available</p>
-                        <p className="text-sm">
-                          Courses will appear here once students enroll
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Actions and Filters */}
-              <div className="px-4 lg:px-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <Button
-                    onClick={() => setIsAddDialogOpen(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <PlusIcon className="h-4 w-4" />
-                    Add New Course
-                  </Button>
-
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        placeholder="Search courses..."
-                        className="pl-10 w-64"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-
-                    <Select
-                      value={categoryFilter}
-                      onValueChange={setCategoryFilter}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="All Categories" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {getCategoryOptions().map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="All Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="published">Published</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="Sort by" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="title">Title</SelectItem>
-                        <SelectItem value="instructor">Instructor</SelectItem>
-                        <SelectItem value="category">Category</SelectItem>
-                        <SelectItem value="price">Price</SelectItem>
-                        <SelectItem value="rating">Rating</SelectItem>
-                        <SelectItem value="students">Students</SelectItem>
-                        <SelectItem value="recent">Recently Updated</SelectItem>
-                      </SelectContent>
-                    </Select>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            {category.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <Badge
+                              variant={
+                                category.isActive ? "default" : "secondary"
+                              }
+                              style={{
+                                backgroundColor: category.isActive
+                                  ? category.color
+                                  : undefined,
+                              }}
+                            >
+                              {category.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              Updated: {category.updatedAt}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                </div>
-              </div>
 
-              {/* Courses Table */}
-              <div className="px-4 lg:px-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>
-                      All Courses ({filteredCourses.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Course</TableHead>
-                          <TableHead>Instructor</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Rating</TableHead>
-                          <TableHead>Students</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredCourses.map((course) => (
-                          <TableRow key={course.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <img
-                                  src={course.thumbnail}
-                                  alt={course.title}
-                                  className="h-12 w-16 object-cover rounded"
-                                />
-                                <div>
-                                  <div className="font-medium">
-                                    {course.title}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                    <ClockIcon className="h-3 w-3" />
-                                    {course.duration}
-                                    <BookOpenIcon className="h-3 w-3" />
-                                    {course.lessons} lessons
-                                  </div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              {course.instructor}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{course.category}</Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                {course.originalPrice && (
-                                  <span className="text-sm text-muted-foreground line-through">
-                                    ${course.originalPrice}
-                                  </span>
-                                )}
-                                <span className="font-medium">
-                                  ${course.price}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <StarIcon className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                <span>{course.rating}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {course.students
-                                ? course.students.toLocaleString()
-                                : "-"}
-                            </TableCell>
-                            <TableCell>{getStatusBadge(course)}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openEditDialog(course)}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <PencilIcon className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openDeleteDialog(course)}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2Icon className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </div>
+                  {categories.length === 0 && (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <BookOpenIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No categories available</p>
+                      <p className="text-sm">
+                        Create your first category to get started
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -611,6 +802,15 @@ export default function AdminPage() {
           isOpen={isDeleteDialogOpen}
           onClose={() => setIsDeleteDialogOpen(false)}
           onDelete={handleDeleteCourse}
+        />
+
+        {/* Category Dialog */}
+        <CategoryDialog
+          category={selectedCategory || undefined}
+          isOpen={isCategoryDialogOpen}
+          onClose={() => setIsCategoryDialogOpen(false)}
+          onSave={handleSaveCategory}
+          mode={categoryMode}
         />
       </SidebarInset>
     </SidebarProvider>
