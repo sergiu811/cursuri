@@ -115,7 +115,10 @@ export function LessonDialog({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full max-w-4xl overflow-y-auto">
+      <SheetContent
+        side="right"
+        className="!w-[98vw] !max-w-none overflow-y-auto"
+      >
         <SheetHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -135,10 +138,13 @@ export function LessonDialog({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="secondary">{lesson.duration}</Badge>
+              <Badge variant="outline" className="flex items-center gap-1">
+                <ClockIcon className="h-3 w-3" />
+                {lesson.duration}
+              </Badge>
               {lesson.completed && (
-                <Badge className="bg-green-100 text-green-800">
-                  <CheckCircleIcon className="h-3 w-3 mr-1" />
+                <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
+                  <CheckCircleIcon className="h-3 w-3" />
                   Completed
                 </Badge>
               )}

@@ -18,6 +18,7 @@ import {
   UsersIcon,
   BookOpenIcon,
   GraduationCapIcon,
+  ShieldIcon,
 } from "lucide-react";
 
 import { NavDocuments } from "~/components/nav-documents";
@@ -55,6 +56,11 @@ const data = {
       title: "Course Library",
       url: "/library",
       icon: BookOpenIcon,
+    },
+    {
+      title: "Admin Panel",
+      url: "/admin",
+      icon: ShieldIcon,
     },
     {
       title: "Lifecycle",
