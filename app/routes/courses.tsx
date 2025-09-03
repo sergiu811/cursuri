@@ -17,16 +17,17 @@ import {
   SortAscIcon,
   BookOpenIcon,
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import coursesData from "../dashboard/courses.json";
 
 export default function CoursesPage() {
   const purchasedCourses = coursesData.purchasedCourses;
+  const navigate = useNavigate();
 
   const handleContinueCourse = (courseId: string) => {
-    // TODO: Implement course continuation logic
-    console.log("Continue course:", courseId);
+    // Navigate to the course detail page
+    navigate(`/course/${courseId}`);
   };
 
   const handleSearch = (searchTerm: string) => {

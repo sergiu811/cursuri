@@ -5,5 +5,6 @@ export default [
   route("dashboard", "routes/dashboard.tsx"),
   route("login", "routes/login.tsx"),
   route("courses", "routes/courses.tsx"),
+  route("course/:courseId", "routes/course-detail.tsx"),
   route("library", "routes/library.tsx"),
 ] satisfies RouteConfig;
